@@ -12,7 +12,7 @@ var scheduler *gocron.Scheduler
 
 func Init(configPath string) bool {
   scheduler = gocron.NewScheduler()
-  setConfig(loadConfig(configPath + "/collectors"))
+  setConfig(loadConfig(configPath + "/collectors.yaml"))
   initCaches()
   env.LoadFromYMLFiles(configPath + "/collectors/", loadYAML)
   <- scheduler.Start()
