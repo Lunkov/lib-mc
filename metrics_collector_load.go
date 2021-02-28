@@ -12,9 +12,9 @@ var scheduler *gocron.Scheduler
 
 func Init(configPath string) bool {
   scheduler = gocron.NewScheduler()
-  setConfig(loadConfig(configPath + "/clients"))
+  setConfig(loadConfig(configPath + "/collectors"))
   initCaches()
-  env.LoadFromYMLFiles(configPath + "/clients", loadYAML)
+  env.LoadFromYMLFiles(configPath + "/collectors/", loadYAML)
   <- scheduler.Start()
   return true
 }
@@ -28,6 +28,7 @@ func loadYAML(filename string, yamlFile []byte) int {
     glog.Errorf("ERR: yamlFile(%s): YAML: %v", filename, err)
   }
   config := getConfig()
+  glog.Errorf("L: yamlFile(%s): mapMod: %v", filename, mapMod)
   if(len(mapMod) > 0) {
     for key, item := range mapMod {
       if workerExists(item.API) {

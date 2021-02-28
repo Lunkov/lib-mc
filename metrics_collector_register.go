@@ -14,7 +14,7 @@ func WorkerRegister(worker WorkerInterface) {
 func workerInit(code string, initInfo Info) {
   w, ok := modFuncs[code]
   if !ok {
-    glog.Errorf("ERR: Client API '%s' not found\n", code)
+    glog.Errorf("ERR: Client API '%s' not found", code)
     return
   }
   w.Init(initInfo)

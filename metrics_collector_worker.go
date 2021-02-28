@@ -2,6 +2,7 @@ package mc
 
 import (
   "time"
+  "github.com/golang/glog"
   "github.com/Lunkov/lib-mq"
 )
 
@@ -42,6 +43,7 @@ func (w *WorkerInfo) Init(conn Info) {
   if w.ClientData.Nats.Url != "" {
     w.Nats.NatsInit(w.ClientData.Nats.Url)
   }
+  glog.Infof("LOG: Init Client API '%s'", w.API)
 }
 
 func (w *WorkerInfo) Close() {
@@ -57,6 +59,7 @@ func (w *WorkerInfo) SendMetrics(metrics *[]DeviceMetric) {
   if w.ClientData.Nats.ReturnArray {
     w.resArray[w.ClientData.Nats.SubjectMetric] = (*metrics)
   }
+  glog.Infof("LOG: Close Client API '%s'", w.API)
 }
 
 func (w *WorkerInfo) SendDeviceCoord(deviceCoord *DeviceCoord) {
@@ -65,6 +68,9 @@ func (w *WorkerInfo) SendDeviceCoord(deviceCoord *DeviceCoord) {
   }
   if w.ClientData.Nats.ReturnArray {
     w.resArray[w.ClientData.Nats.SubjectDeviceCoord] = (*deviceCoord)
+  }
+  if glog.V(9) {
+    glog.Infof("DBG: SendDeviceCoord(%s).(SN=%s)", w.API, deviceCoord.Device_SN)
   }
 }
 
@@ -75,6 +81,9 @@ func (w *WorkerInfo) SendDeviceNew(device *DeviceInfo) {
   if w.ClientData.Nats.ReturnArray {
     w.resArray[w.ClientData.Nats.SubjectDevice] = (*device)
   }
+  if glog.V(9) {
+    glog.Infof("DBG: SendDeviceNew(%s).(SN=%s)", w.API, device.Device_SN)
+  }
 }
 
 func (w *WorkerInfo) Start() {
@@ -83,6 +92,9 @@ func (w *WorkerInfo) Start() {
   w.ClientData.Status.LastError = ""
   w.ClientData.Status.CntDevices = 0
   w.ClientData.Status.CntMetrics = 0
+  if glog.V(9) {
+    glog.Infof("DBG: Start(%s)", w.API)
+  }
 }
 
 func (w *WorkerInfo) Finish() {
@@ -99,6 +111,9 @@ func (w *WorkerInfo) Finish() {
   }
   if w.ClientData.Nats.ReturnArray {
     w.resArray[w.ClientData.Nats.SubjectStat] = result
+  }
+  if glog.V(9) {
+    glog.Infof("DBG: Finish(%s)", w.API)
   }
 }
 
