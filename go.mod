@@ -1,4 +1,4 @@
-module github.com/Lunkov/lib-mc.git
+module github.com/Lunkov/lib-mc
 
 go 1.13
 
