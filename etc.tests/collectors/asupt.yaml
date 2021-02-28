@@ -1,0 +1,20 @@
+msk.asupr:
+  api: worker.api.test
+  cron:
+    every_minutes: 17
+  org:
+    title: "Name Organization"
+  url_auth: "http://localhost:9100/auth"
+  url: "http://localhost:9100/get_data"
+  login: "***"
+  password: "***"
+  org_code: it.msk.rf
+  buildings_id:
+    "787638529": "Bratislavskaya.18k1.msk.rf"
+    "787638551": "Bratislavskaya.18k2.msk.rf"
+    "787638603": "Bratislavskaya.20.msk.rf"
+    "787639646": "Novomarinskaya.11k1.msk.rf"
+    "787639682": "Novomarinskaya.13.msk.rf"
+    "787639605": "Myachkovskiy.9.msk.rf"
+    "787639308": "Myachkovskiy.11.msk.rf"
+
