@@ -43,6 +43,14 @@ func workersPublicInfo() []PublicInfo {
   return res
 }
 
+func workersResults() (map[string]map[string]interface{}) {
+  res := make(map[string]map[string]interface{})
+  for _, w := range modFuncs {
+    res[w.GetAPI()] = w.GetResultArray()
+  }
+  return res
+}
+
 func workerRun(code string) {
   w, ok := modFuncs[code]
   if !ok {

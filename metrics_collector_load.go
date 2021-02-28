@@ -64,6 +64,10 @@ func GetPublicInfo() []PublicInfo {
   return workersPublicInfo()
 }
 
+func GetWorkersResults() map[string]map[string]interface{} {
+  return workersResults()
+}
+
 func GetPublicJson() []byte {
   pJson, _ := json.Marshal(workersPublicInfo())
   return pJson

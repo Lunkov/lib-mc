@@ -30,6 +30,9 @@ func TestCheckLoadClients(t *testing.T) {
   res[0].Status.RunTime = 0
   res[0].Status.LastRun = res_need[0].Status.LastRun
   assert.Equal(t, res_need, res)
+  
+  r_need := map[string]map[string]interface {}(map[string]map[string]interface {}{"worker.api.test":map[string]interface {}(nil)})
+  assert.Equal(t, r_need, GetWorkersResults())
 
   defer Close()
 }
