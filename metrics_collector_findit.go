@@ -14,18 +14,18 @@ import (
 
 var dbHandleRead *sqlx.DB
 
-var districtCode *cache.Cache   // Distrct Code -> UUID
-var deviceCode   *cache.Cache   // Device  Code -> UUID
-var deviceSN     *cache.Cache   // Device  Serial Number -> UUID
-var metricCode   *cache.Cache   // Metric  Code -> UUID
+var districtCode cache.ICache   // Distrct Code -> UUID
+var deviceCode   cache.ICache   // Device  Code -> UUID
+var deviceSN     cache.ICache   // Device  Serial Number -> UUID
+var metricCode   cache.ICache   // Metric  Code -> UUID
 
 func initCaches() {
   cfg := getConfig()
   
-  districtCode = cache.New("memory", 0, "", 0)
-  deviceCode   = cache.New("memory", 0, "", 0)
-  deviceSN     = cache.New("memory", 0, "", 0)
-  metricCode   = cache.New("memory", 0, "", 0)
+  districtCode = cache.New("mutexmap", 0, "", 0)
+  deviceCode   = cache.New("mutexmap", 0, "", 0)
+  deviceSN     = cache.New("mutexmap", 0, "", 0)
+  metricCode   = cache.New("mutexmap", 0, "", 0)
   
   dbHandleRead = dbConnect(models.ConnectStr(cfg.PostgresRead))
   if dbHandleRead != nil {
@@ -75,17 +75,18 @@ func MetricIDFindByCode(code string) (uuid.UUID, bool) {
   return cacheFindBy(metricCode, "metrics", "code", code)
 }
 
-func cacheFindBy(c *cache.Cache, model string, search string, findit string) (uuid.UUID, bool) {
-  uid1, ok := c.GetStr(findit)
+func cacheFindBy(c cache.ICache, model string, search string, findit string) (uuid.UUID, bool) {
+  var s uuid.UUID
+  uid1, ok := c.Get(findit, &s)
   if ok {
-    uid, _ := uuid.Parse(uid1)
-    return uid, true
+    uid, ok2 := uid1.(uuid.UUID)
+    return uid, ok2
   }
   uid2, ok2 := GetOneId(dbHandleRead, "SELECT id FROM $1 WHERE $2=$3;", model, search, findit)
   if !ok2 {
     return uuid.Nil, false
   }
-  c.SetStr(findit, uid2)
+  c.Set(findit, uid2)
   uid, _ := uuid.Parse(uid2)
   return uid, true
 }
