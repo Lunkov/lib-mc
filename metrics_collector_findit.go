@@ -12,77 +12,66 @@ import (
   "github.com/Lunkov/lib-model"
 )
 
-var dbHandleRead *sqlx.DB
-
-var districtCode cache.ICache   // Distrct Code -> UUID
-var deviceCode   cache.ICache   // Device  Code -> UUID
-var deviceSN     cache.ICache   // Device  Serial Number -> UUID
-var metricCode   cache.ICache   // Metric  Code -> UUID
-
-func initCaches() {
-  cfg := getConfig()
+func (m *MetricsCollector) initCaches() {
+  m.districtCode = cache.New("mutexmap", 0, "", 0)
+  m.deviceCode   = cache.New("mutexmap", 0, "", 0)
+  m.deviceSN     = cache.New("mutexmap", 0, "", 0)
+  m.metricCode   = cache.New("mutexmap", 0, "", 0)
   
-  districtCode = cache.New("mutexmap", 0, "", 0)
-  deviceCode   = cache.New("mutexmap", 0, "", 0)
-  deviceSN     = cache.New("mutexmap", 0, "", 0)
-  metricCode   = cache.New("mutexmap", 0, "", 0)
-  
-  dbHandleRead = dbConnect(models.ConnectStr(cfg.PostgresRead))
-  if dbHandleRead != nil {
+  if !m.dbConnect(models.ConnectStr(m.Conf.PostgresRead)) {
     glog.Errorf("ERR: DB: failed to connect database (read)")
-    return
   }
 }
 
-func closeCaches() {
-  if districtCode != nil {
-    districtCode.Close()
-    districtCode = nil
-  }
-  
-  if deviceCode != nil {
-    deviceCode.Close()
-    deviceCode = nil
+func (m *MetricsCollector) closeCaches() {
+  if m.districtCode != nil {
+    m.districtCode.Close()
+    m.districtCode = nil
   }
   
-  if deviceSN != nil {
-    deviceSN.Close()
-    deviceSN = nil
+  if m.deviceCode != nil {
+    m.deviceCode.Close()
+    m.deviceCode = nil
   }
   
-  if metricCode != nil {
-    metricCode.Close()
-    metricCode = nil
+  if m.deviceSN != nil {
+    m.deviceSN.Close()
+    m.deviceSN = nil
   }
   
-  dbClose(dbHandleRead)
-  dbHandleRead = nil
+  if m.metricCode != nil {
+    m.metricCode.Close()
+    m.metricCode = nil
+  }
+  
+  m.dbClose()
+  m.dbHandleRead = nil
 }
 
-func DistrictIDFindByCode(code string) (uuid.UUID, bool) {
-  return cacheFindBy(districtCode, "districts", "code", code)
+func (m *MetricsCollector) DistrictIDFindByCode(code string) (uuid.UUID, bool) {
+  return m.cacheFindBy(m.districtCode, "districts", "code", code)
 }
 
-func DeviceIDFindByCode(code string) (uuid.UUID, bool) {
-  return cacheFindBy(deviceCode, "devices", "code", code)
+func (m *MetricsCollector) DeviceIDFindByCode(code string) (uuid.UUID, bool) {
+  return m.cacheFindBy(m.deviceCode, "devices", "code", code)
 }
 
-func DeviceIDFindBySN(sn string) (uuid.UUID, bool) {
-  return cacheFindBy(deviceSN, "devices", "sn", sn)
+func (m *MetricsCollector) DeviceIDFindBySN(sn string) (uuid.UUID, bool) {
+  return m.cacheFindBy(m.deviceSN, "devices", "sn", sn)
 }
 
-func MetricIDFindByCode(code string) (uuid.UUID, bool) {
-  return cacheFindBy(metricCode, "metrics", "code", code)
+func (m *MetricsCollector) MetricIDFindByCode(code string) (uuid.UUID, bool) {
+  return m.cacheFindBy(m.metricCode, "metrics", "code", code)
 }
 
-func cacheFindBy(c cache.ICache, model string, search string, findit string) (uuid.UUID, bool) {
+func (m *MetricsCollector) cacheFindBy(c cache.ICache, model string, search string, findit string) (uuid.UUID, bool) {
   var s uuid.UUID
   uid1, ok := c.Get(findit, &s)
   if ok {
     uid, ok2 := uid1.(uuid.UUID)
     return uid, ok2
   }
-  uid2, ok2 := GetOneId(dbHandleRead, "SELECT id FROM $1 WHERE $2=$3;", model, search, findit)
+  uid2, ok2 := m.GetOneId("SELECT id FROM $1 WHERE $2=$3;", model, search, findit)
   if !ok2 {
     return uuid.Nil, false
   }
@@ -91,31 +80,30 @@ func cacheFindBy(c cache.ICache, model string, search string, findit string) (uu
   return uid, true
 }
 
-func dbConnect(connectStr string) (*sqlx.DB) {
+func (m *MetricsCollector) dbConnect(connectStr string) bool {
   var err error
-  glog.Infof("LOG: DB: CONNECT: %s \n", connectStr)
-  dbHandle, err := sqlx.Connect("postgres", connectStr)
+  m.dbHandleRead, err = sqlx.Connect("postgres", connectStr)
   if err != nil {
     glog.Errorf("ERR: DB: CONNECT ERR: %s \n", err)
   }
 
-  return dbHandle
+  return err == nil
 }
 
-func dbClose(dbHandle *sqlx.DB) {
-  if dbHandle != nil {
-    dbHandle.Close()
+func (m *MetricsCollector) dbClose() {
+  if m.dbHandleRead != nil {
+    m.dbHandleRead.Close()
   }
 }
 
-func GetOneId(dbHandle *sqlx.DB, sqlStatement string, model string, search string, findit string) (string, bool) {
-  if dbHandle == nil {
+func (m *MetricsCollector) GetOneId(sqlStatement string, model string, search string, findit string) (string, bool) {
+  if m.dbHandleRead == nil {
     glog.Errorf("ERR: DB: dbHandle == nil")
     return "", false
   }
   var err error
   var findId string
-  row := dbHandle.QueryRow(sqlStatement, model, search, findit)
+  row := m.dbHandleRead.QueryRow(sqlStatement, model, search, findit)
   ok := false
   switch err = row.Scan(&findId); err {
   case sql.ErrNoRows:

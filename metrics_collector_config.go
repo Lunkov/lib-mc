@@ -18,24 +18,22 @@ type ConfigInfo struct {
   PostgresRead    models.PostgreSQLInfo   `yaml:"postgres_read"`
 }
 
-var globConf = ConfigInfo{}
-
-func setConfig(conf ConfigInfo) {
-  globConf = conf
+func (m *MetricsCollector) setConfig(conf ConfigInfo) {
+  m.Conf = conf
 }
 
-func getConfig() *ConfigInfo {
-  return &globConf
+func (m *MetricsCollector) GetConfig() *ConfigInfo {
+  return &m.Conf
 }
 
-func loadConfig(filename string) ConfigInfo {
+func (m *MetricsCollector) LoadConfig(filename string) {
   var err error
   var conf = ConfigInfo{}
-    
+
   yamlFile, err := ioutil.ReadFile(filename)
   if err != nil {
     glog.Errorf("ERR: yamlFile(%s)  #%v ", filename, err)
-    return conf
+    return
   }
 
   err = yaml.Unmarshal(yamlFile, &conf)
@@ -46,6 +44,6 @@ func loadConfig(filename string) ConfigInfo {
   if conf.ConfigPath == "" {
     conf.ConfigPath = filepath.Dir(filename)
   }
-  return conf
+  m.Conf = conf
 }
 

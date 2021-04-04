@@ -8,18 +8,16 @@ import (
   "github.com/jasonlvhit/gocron"
 )
 
-var scheduler *gocron.Scheduler
-
-func Init(configPath string) bool {
-  scheduler = gocron.NewScheduler()
-  setConfig(loadConfig(configPath + "/collectors.yaml"))
-  initCaches()
-  env.LoadFromFiles(configPath + "/collectors/", "", loadYAML)
-  <- scheduler.Start()
+func (m *MetricsCollector) Init(configPath string) bool {
+  m.scheduler = gocron.NewScheduler()
+  m.LoadConfig(configPath + "/collectors.yaml")
+  m.initCaches()
+  env.LoadFromFiles(configPath + "/collectors/", "", m.loadYAML)
+  <- m.scheduler.Start()
   return true
 }
 
-func loadYAML(filename string, yamlFile []byte) int {
+func (m *MetricsCollector) loadYAML(filename string, yamlFile []byte) int {
   var err error
   var mapMod = make(map[string]Info)
 
@@ -27,23 +25,22 @@ func loadYAML(filename string, yamlFile []byte) int {
   if err != nil {
     glog.Errorf("ERR: yamlFile(%s): YAML: %v", filename, err)
   }
-  config := getConfig()
   if(len(mapMod) > 0) {
     for key, item := range mapMod {
-      if workerExists(item.API) {
-        if config.Nats.Url != "" {
-          item.Nats = config.Nats
+      if m.workerExists(item.API) {
+        if m.Conf.Nats.Url != "" {
+          item.Nats = m.Conf.Nats
         }
-        workerInit(item.API, item)
+        m.workerInit(item.API, item)
         
         if item.Cron.EverySeconds > 0 {
           glog.Infof("LOG: CRON: ADD TASK '%s' every %d seconds\n", key, item.Cron.EverySeconds)
-          scheduler.Every(item.Cron.EverySeconds).Seconds().Lock().Do(workerRun, item.API)
+          m.scheduler.Every(item.Cron.EverySeconds).Seconds().Lock().Do(m.workerRun, item.API)
         }
         if item.Cron.EveryMinutes > 0 {
           glog.Infof("LOG: CRON: ADD TASK '%s' every %d minutes\n", key, item.Cron.EveryMinutes)
-          scheduler.Every(item.Cron.EveryMinutes).Minutes().Lock().Do(workerRun, item.API)
-          go workerRun(item.API)
+          m.scheduler.Every(item.Cron.EveryMinutes).Minutes().Lock().Do(m.workerRun, item.API)
+          go m.workerRun(item.API)
         }
       } else {
         glog.Errorf("ERR: Worker not found for Mod='%s' yamlFile(%s)", item.API, filename)
@@ -54,22 +51,22 @@ func loadYAML(filename string, yamlFile []byte) int {
   return len(mapMod)
 }
 
-func Close() {
-  scheduler.Clear()
-  workersClose()
-  closeCaches()
+func (m *MetricsCollector) Close() {
+  m.scheduler.Clear()
+  m.workersClose()
+  m.closeCaches()
 }
 
-func GetPublicInfo() []PublicInfo {
-  return workersPublicInfo()
+func (m *MetricsCollector) GetPublicInfo() []PublicInfo {
+  return m.workersPublicInfo()
 }
 
-func GetWorkersResults() map[string]map[string]interface{} {
-  return workersResults()
+func (m *MetricsCollector) GetWorkersResults() map[string]map[string]interface{} {
+  return m.workersResults()
 }
 
-func GetPublicJson() []byte {
-  pJson, _ := json.Marshal(workersPublicInfo())
+func (m *MetricsCollector) GetPublicJson() []byte {
+  pJson, _ := json.Marshal(m.workersPublicInfo())
   return pJson
 }
 

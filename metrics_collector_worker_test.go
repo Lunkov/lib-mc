@@ -7,6 +7,8 @@ import (
   "time"
   "flag"
   "github.com/golang/glog"
+  
+  "github.com/Lunkov/lib-ref"
 )
 
 type TestWorkerInfo struct {
@@ -59,7 +61,7 @@ func TestCheckWorker(t *testing.T) {
 
   wt.Start()
   //wt.GetData()
-  runMethodIfExists(wt.API, wt, "GetData")
+  ref.RunMethodIfExists(wt, "GetData")
   wt.Finish()
   
   res := wt.GetResultArray()
