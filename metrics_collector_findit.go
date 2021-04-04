@@ -13,10 +13,10 @@ import (
 )
 
 func (m *MetricsCollector) initCaches() {
-  m.districtCode = cache.NewConfig(m.cacheDictricCodes)
-  m.deviceCode   = cache.NewConfig(m.cacheDeviceCodes)
-  m.deviceSN     = cache.NewConfig(m.cacheDeviceSN)
-  m.metricCode   = cache.NewConfig(m.cacheMetricsCodes)
+  m.districtCode = cache.NewConfig(&m.Conf.cacheDictricCodes)
+  m.deviceCode   = cache.NewConfig(&m.Conf.cacheDeviceCodes)
+  m.deviceSN     = cache.NewConfig(&m.Conf.cacheDeviceSN)
+  m.metricCode   = cache.NewConfig(&m.Conf.cacheMetricsCodes)
   
   if !m.dbConnect(models.ConnectStr(m.Conf.PostgresRead)) {
     glog.Errorf("ERR: DB: failed to connect database (read)")

@@ -9,6 +9,7 @@ import (
   "github.com/golang/glog"
   
   "github.com/Lunkov/lib-model"
+  "github.com/Lunkov/lib-cache"
 )
 
 type ConfigInfo struct {
