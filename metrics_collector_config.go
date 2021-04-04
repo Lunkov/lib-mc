@@ -12,10 +12,16 @@ import (
 )
 
 type ConfigInfo struct {
-  ConfigPath      string
+  ConfigPath         string
 
-  Nats            NatsInfo                `yaml:"nats"`
-  PostgresRead    models.PostgreSQLInfo   `yaml:"postgres_read"`
+  Nats               NatsInfo                `yaml:"nats"`
+  
+  cacheDictricCodes  cache.CacheConfig       `yaml:"cache_dicstrict_codes"`
+  cacheDeviceCodes   cache.CacheConfig       `yaml:"cache_device_codes"`
+  cacheDeviceSN      cache.CacheConfig       `yaml:"cache_device_sn"`
+  cacheMetricsCodes  cache.CacheConfig       `yaml:"cache_metrics_codes"`
+  
+  PostgresRead       models.PostgreSQLInfo   `yaml:"postgres_read"`
 }
 
 func (m *MetricsCollector) setConfig(conf ConfigInfo) {
